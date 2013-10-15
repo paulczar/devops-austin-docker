@@ -1,0 +1,628 @@
+<!doctype html>
+<html lang="en">
+
+	<head>
+		<meta charset="utf-8">
+
+		<title>Getting ship done with Docker</title>
+
+		<meta name="description" content="I built a SaaS and I shipped it">
+		<meta name="author" content="Paul Czarkowski">
+
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<link rel="stylesheet" href="css/reveal.min.css">
+		<link rel="stylesheet" href="css/theme/default.css" id="theme">
+
+		<!-- For syntax highlighting -->
+		<link rel="stylesheet" href="lib/css/zenburn.css">
+
+		<!-- If the query includes 'print-pdf', use the PDF print sheet -->
+		<script>
+			document.write( '<link rel="stylesheet" href="css/print/' + ( window.location.search.match( /print-pdf/gi ) ? 'pdf' : 'paper' ) + '.css" type="text/css" media="print">' );
+		</script>
+
+		<!--[if lt IE 9]>
+		<script src="lib/js/html5shiv.js"></script>
+		<![endif]-->
+	</head>
+
+	<body>
+
+		<div class="reveal">
+
+			<!-- Any section element inside of this container is displayed as a slide -->
+			<div class="slides">
+				<section>
+					<h1>Getting Ship Done</h1>
+					<h2><i>(and other bad puns)</i>
+					<h3>with Docker</h3>
+					<p>
+						<small>Created by <a href="http://tech.paulcz.net">Paul Czarkowski</a> / <a href="http://twitter.com/pczarkowski">@pczarkowski</a></small>
+					</p>
+				</section>
+
+				<section>
+					<h2>About Me</h2>
+				</section>
+
+				<section>
+					<h2>Australian...</h2>
+ 					<p><img src="images/aussie.jpg"><br>
+				</section>
+
+				<section>
+					<h2>I am not a devops</h2>
+ 					<p><img src="images/sysadmin.jpg"><br>
+ 					<h4>What even is devops ?</h4>
+				</section>
+
+				<section>
+					<h2>I quit my job!</h2>
+					<p>and you should too... </p>
+					<br>
+					<blockquote  class="fragment" cite="https://twitter.com/jesserobbins">Don't fight stupid.  Make more awesome.  @jesserobbins</blockquote><br>
+					<p  class="fragment">Talk to the guy sitting beside you, he's probably hiring for awesome right now.</p>
+				</section>
+
+				<section>
+					<h2>Amateur Chef hacker...</h2>
+ 					<p><img src="images/Chef_Logo.png" width="25%"><br>
+ 					<a href="https://github.com/paulczar/cookbook-openstack-docker">https://github.com/paulczar/cookbook-openstack-docker</a>
+				</section>
+
+				<section>
+					<h2>Also the other kind of Amateur Chef...</h2>
+ 					<p><img src="images/popup.jpg" width="50%">
+				</section>
+
+				<section>
+					<h2>Best Queso in Austin - 2013</h2>
+ 					<p><img src="images/queso.jpg" width="50%">
+				</section>
+
+				<section>
+					<h2>And A Docker Hacker...</h2>
+ 					<p><img src="images/docker-repo.png" width="75%">
+				</section>
+
+				<section>
+					<h2>What is docker anyway?</h2>
+					<p><img src="images/docker.png" width="75%">
+				</section>
+
+				<section>
+					<h2>What is docker anyway?</h2>
+					<ul>
+						<li><a href="https://www.docker.io/learn_more/">https://www.docker.io/learn_more</a>
+ 						<li>Containers <i>not</i> Virtualization
+ 						<li>Run anywhere!
+ 						<li>Lightweight and Cheap
+ 						<ul>
+ 							<li>uses LXC
+ 							<li>Layered Filesystem
+ 						</ul>
+ 					</ul>
+				</section>
+
+				<section>
+					<h2>Live Demos</h2> 
+					<ul>
+					  <li>All demos are in the `live_demo` directory
+					  <li>Assume you're on a Linux box with Docker 6.x installed
+					  <li>^ Should be able to run inside vagrant if not linux.
+					  <li>If demo goes haywire './clean.sh' will nuke all running containers.
+					</ul>
+				</section>
+
+				<section>
+					<h2>Docker 101</h2> 
+					<h4>Run a Docker Container</h4>
+					  <p align="left">Interactive Shell</p>
+						<pre><code> docker run -i -t busybox /bin/sh</code></pre>
+					  <p align="left">Run a command</p>
+						<pre><code> docker run busybox cat /etc/passwd</code></pre>
+					  <p align="left">Run an application</p>
+						<pre><code> docker run -d -p 3306 paulczar/mysql mysqld_safe</code></pre>
+				</section>
+
+				<section>
+					<h2>Docker 102</h2>
+					<h4>Container Management</h4>
+					  <p align="left">Show running containers</p>
+						<pre><code> docker ps</code></pre>
+					  <p align="left">Get details on specific container</p>
+						<pre><code> docker inspect [container-id]</code></pre>
+					  <p align="left">list public port NAT to a container</p>
+						<pre><code> docker port [container-id] [private-port]</code></pre>
+					  <p align="left">Read logs from a container</p>
+						<pre><code> docker logs [container-id]</code></pre>
+				</section>
+
+				<section>
+					<h2>Docker 103</h2>
+					<h4>Single Container Orchestration with SHELL</h4>
+						<pre><code>
+ MYSQL=$(docker run -d -p 3306 paulczar/mysql mysqld_safe)
+
+ MYSQL_IP=$(docker inspect $MYSQL | grep IPAd | awk -F'"' '{print $4}')
+
+ MYSQL_PORT=$(docker port $MYSQL 3306)
+
+ sleep 2  
+
+ echo "select now() \G" | mysql -uroot -proot -h 127.0.0.1 -P $MYSQL_PORT
+
+ echo "select now() \G" | mysql -uroot -proot -h $MYSQL_IP
+						</code></pre>
+				</section>
+
+				<section>
+					<h2>Docker 103 - Live Demo</h2>
+						<pre><code>
+source ./docker103.sh
+mysql -uroot -proot -h 127.0.0.1 -P $MYSQL_PORT
+^C
+ 						</code></pre>
+						<img src="images/stop_demo_time.png">
+				</section>
+
+				<section>
+					<h2>Docker 104</h2>
+					<h4>Multi Tier Wordpress: Dev -> Stage -> Prod</h4>
+					<a href="https://github.com/paulczar/docker-wordpress">https://github.com/paulczar/docker-wordpress</a>
+					<img src="images/docker104.png">
+				</section>
+
+				<section>
+					<h2>Docker 104</h2>
+					<h4>Multi Tier Wordpress: Dev -> Stage -> Prod</h4>
+						<pre class=""><code>
+git clone https://github.com/paulczar/docker-wordpress.git
+cd docker-wordpress
+# Deploy single node development environment with Vagrant
+vagrant up
+# Deploy 6 container web stack
+source ./docker
+# Deploy 6 node web stack on openstack (with Docker driver)
+source ./openstack
+						</code></pre>
+						<p>^ not live demo ... just showing workflow</p>
+				</section>
+
+				<section>				
+					<h2>Docker 104 - Live Demo</h2>
+						<pre><code>
+cd docker104 && source ./docker && cd ..
+curl http://${HAPROXY_WEB_IP} | wc -l
+						</code></pre>
+<p><small>Add <b>wordpress  [HAPROXY_WEB_IP]</b> to /etc/hosts
+ if you want to display properly web browser</small></p>
+
+						<img src="images/livedemo.jpg">
+				</section>
+
+				<section>
+					<h2>Docker 105</h2>
+					<h4>Docker Index</h4>
+					<p><a href="http://index.docker.io">http://index.docker.io</a>
+						<pre><code>
+  docker pull paulczar/mysql
+
+  docker push paulczar/mysql
+
+  docker pull samalba/docker-registry
+						</code></pre>
+				</section>
+
+
+				<section>
+					<h2>Docker 201</h2>
+					<h4>Build a base image</h4>
+					<p>Base images are just a .tgz of /
+					<p>Ubuntu cloud image archive makes this easy <font color="pink"><3</font>
+						<pre class=""><code>
+	wget -O /tmp/precise.tgz \
+		http://cloud-images.ubuntu.com/.../precise-...-amd64-root.tar.gz
+
+	cat /tmp/precise.tgz | \
+		sudo docker import - precise-cloud-image
+
+	docker run  precise-cloud-image lsb_release -a
+
+						</code></pre>
+				</section>
+
+				<section>
+					<h2>Docker 202</h2>
+					<h4>Build a container with a Dockerfile</h4>
+						<pre class=""><code>
+# This file creates a container that 
+# runs MySQL Server when started
+# Author: Paul Czarkowski
+# Date: 08/04/2013
+FROM ubuntu:12.04
+MAINTAINER Paul Czarkowski "paul@paulcz.net"
+
+RUN apt-get update
+RUN apt-get -y install mysql-server
+
+ADD mysql-listen.cnf /etc/mysql/conf.d/mysql-listen.cnf
+
+# Start mysql server
+CMD ["/usr/bin/mysqld_safe"]
+ 						</code></pre>
+
+				</section>
+
+				<section>
+					<h2>Docker 202</h2>
+					<h4>Build a container with a Dockerfile</h4>
+ 						<pre><code>
+# Build container from local directory
+docker build -t demo/mysql .
+# Build container from github repo
+docker build -t demo/mysql github.com/paulczar/docker-mysql
+ 						</code></pre>
+				</section>
+
+				<section>
+					<h2>Docker 203</h2>
+					<h4>Slightly more complicated Dockerfile</h4>
+					<p><a href="https://github.com/paulczar/docker-znc">https://github.com/paulczar/docker-znc</a>
+				</section>
+
+				<section>	
+				<h2>Docker 203</h2>
+				  <h3>Dockerfile</h3>				
+					<pre class="stretch"><code>
+# This file creates a container that runs ZNC
+#
+# Author: Paul Czarkowski
+# Date: 08/04/2013
+FROM ubuntu:12.10
+MAINTAINER Paul Czarkowski "paul@paulcz.net"
+
+RUN apt-get update
+RUN apt-get -y install znc
+ADD start-znc /usr/local/bin/start-znc
+ADD znc.pem /opt/znc/znc.pem
+ADD znc.conf /opt/znc/configs/znc.conf
+RUN chmod +x /usr/local/bin/start-znc
+RUN useradd znc
+RUN chown -R znc:znc /opt/znc
+EXPOSE 6667
+
+CMD ["start-znc"]
+					</code></pre>					
+				</section>
+
+				<section>		
+					<h2>Docker 203</h2>
+				  <h3>start-znc</h3>			
+					<pre class="stretch"><code>
+#!/bin/bash
+
+ZNC_USER=${ZNC_USER:-$(tr -dc "[:alpha:]" < /dev/urandom | head -c 8)}
+ZNC_PASS=${ZNC_PASS:-$(tr -dc "[:alpha:]" < /dev/urandom | head -c 8)}
+IRC_SERVER=${IRC_SERVER:-'irc.freenode.net'}
+IRC_PORT=${IRC_PORT:-'6667'}
+
+
+ZNC_SALT="$(dd if=/dev/urandom bs=16c count=1 | md5sum | awk '{print $1}')"
+ZNC_HASH="sha256#$(echo -n ${ZNC_PASS}${ZNC_SALT} | sha256sum | awk '{print $1}')#$ZNC_SALT#"
+
+sed -i "s/ZNC_USER/$ZNC_USER/" /opt/znc/configs/znc.conf
+sed -i "s/ZNC_HASH/$ZNC_HASH/" /opt/znc/configs/znc.conf
+sed -i "s/IRC_SERVER/$IRC_SERVER/" /opt/znc/configs/znc.conf
+sed -i "s/IRC_PORT/$IRC_PORT/" /opt/znc/configs/znc.conf
+
+znc -f -r -d /opt/znc
+					</code></pre>					
+				</section>
+
+				<section>		
+					<h2>Docker 203</h2>				
+				  <h3>Build and Run</h3>			
+					<pre><code>
+$ docker build -t demo/znc github.com/paulczar/docker-znc
+
+$ docker run -e ZNC_USER=paultest -e ZNC_PASS=paultest \
+      -p 6667 -u znc demo/znc start-znc
+
+Connecting to IRC Server: irc.freenode.net:6667
+ZNC User: paultest
+ZNC Pass: paultest
+Opening Config [/opt/znc/configs/znc.conf]... 
+Loading Global Module [lastseen]... [/usr/lib/znc/lastseen.so]
+Binding to port [+6667] using ipv4... 
+Loading user [paultest]
+Adding Server [irc.freenode.net 6667]... 
+					</code></pre>				
+				</section>
+
+				<section>		
+					<h2>Docker 203 - Live Demo</h2>				
+					<pre><code>
+					./docker203.sh
+					</code></pre>				
+					<img src="images/LiveDemo_VS.jpg">
+				</section>
+
+				<section>
+					<h2>Docker 203</h2>
+					<h3>Write a Ruby on Rails app and Ship it!</h3>
+						<p><a href="http://znc.paulcz.net">http://znc.paulcz.net</a>
+				</section>
+
+				<section>
+					<img src="images/znc_saas1.png">
+				</section>
+
+				<section>
+					<img src="images/znc_saas2.png">
+				</section>
+
+				<section>
+				  <h2>Stress Test</h2>
+				  <pre><code>
+for i in {1..100}; do 
+	docker run -e ZNC_USER=znctest$i -e ZNC_PASS=znctest$i -d -p 6667 -u znc paulczar/znc start-znc
+done
+				  </code></pre>
+				  <p>A 512mb rackspace public cloud instance runs 100 ZNC containers without stress...
+				  <br>Could probably handle a lot more ...
+				</section>
+
+				<section>
+					<h3>but IRCops aren't amused...</h3>
+					<img src="images/ircop.png" width="125%">
+				</section>
+
+				<section>
+					<h2>Docker 301</h2>
+					<h3>Configuration Management with Chef-Solo</h3>
+					<p><a href="https://github.com/paulczar/docker-chef-solo">https://github.com/paulczar/docker-chef-solo</a>				
+				</section>
+
+				<section>
+					<h2>Docker 301</h2>
+					<h4>Berksfile</h4>
+				  <pre><code>					
+site :opscode
+
+cookbook 'apache2'
+					</code></pre>
+				</section>
+
+				<section>
+					<h2>Docker 301</h2>
+					<h4>solo.json</h4>
+				  <pre><code>					
+{
+  "run_list": ["recipe[apache2::default]"]
+} 
+					</code></pre>
+					<h4>solo.rb</h4>
+					  <pre><code>					
+root = File.absolute_path(File.dirname(__FILE__))
+
+file_cache_path root
+cookbook_path root + '/cookbooks'			
+					</code></pre>
+				</section>
+
+				<section>
+					<h2>Docker 301</h2>
+					<h4>Dockerfile</h4>
+				  <pre><code>					
+# DOCKER-VERSION 0.5.3
+FROM paulczar/chef-client
+MAINTAINER Paul Czarkowski "paul@paulcz.net"
+
+RUN apt-get -y update
+ADD . /chef
+RUN cd /chef && /opt/chef/embedded/bin/berks install --path /chef/cookbooks
+RUN chef-solo -c /chef/solo.rb -j /chef/solo.json
+
+CMD ["apache2", "-D", "FOREGROUND"]
+					</code></pre>
+					  <pre><code>					
+docker build -t demo/chef-apache .
+docker run -d -p 8080:80 demo/chef-apache
+					</code></pre>
+				</section>
+
+				<section>
+					<h2>Docker 301 - Live Demo</h2>
+					  <pre><code>					
+./docker301.sh
+curl localhost:8085
+					</code></pre>
+					<img src="images/zomg_demo.jpg">
+				</section>
+
+				<section>
+					<img src="images/complicated.png">
+				</section>
+
+				<section>
+					<h2>Docker 302</h2>
+					<h3>Logging, Service Management, Metrics</h3>
+					<ul>
+  				<li>SysAdmins like to know what is going on.
+					<li>It is not obvious how to do these things with docker.
+					<li>But they can be done.
+				  </ul>
+				</section>
+
+				<section>
+					<h2>Docker 302</h2>
+					<h4>Omnibus gives us some magic we can plug into</h4>
+					<p><a href="https://speakerdeck.com/lusis/the-magic-omnibus">https://speakerdeck.com/lusis/the-magic-omnibus</a>
+					<ul>
+					 <li>Builds app and all deps in vendored directory 
+					 <li>Chef is built this way.
+					 <li>Uses a Vagrant/FPM build factory to produce deb/rpm files
+					 <li><a href="https://github.com/paulczar/omnibus-kibana3">Omnibus Kibana</a> (kibana+nginx+runit)
+					</ul><br><br>
+					 <p><i>Using runit in the package gets us closer to service control</i></p>
+				</section>
+
+				<section>
+					<h2>Docker 302</h2>
+					<h4>LXC provides metrics if you know where to look</h4>
+<a href="http://blog.docker.io/2013/10/gathering-lxc-docker-containers-metrics/">http://blog.docker.io/2013/10/gathering-lxc-docker-containers-metrics/</a>
+				</section>
+
+
+				<section>
+					<h2>Docker 302</h2>
+					<h4>Docker Volume</h4>
+					<ul>
+					  <li>You can map a directory from the host to a volume in container
+					  <li>This gives you a place to modify files that both host and container can see.
+					</ul>
+					<pre><code>
+docker run -d -v /opt/website/html:/var/www/html paulczar/apache2
+					</code></pre>
+				</section>
+
+				<section>
+					<h2>Docker 302</h2>
+					<h4>Dockerfile for Omnibus'd Kibana</h4>
+					  <pre><code>					
+# DOCKER-VERSION 0.5.3
+FROM ubuntu
+MAINTAINER Paul Czarkowski "paul@paulcz.net"
+
+ADD https://s3-us-west-2.amazonaws.com/paulcz-packages/kibana3_amd64.deb \
+  		/tmp/kibana3_amd64.deb
+RUN dpkg -i /tmp/kibana3_amd64.deb
+CMD ["/opt/kibana3/embedded/bin/runsvdir-start"]
+					</code></pre>
+				</section>
+
+				<section>
+					<h2>Docker 302</h2>
+					<h4>Tie it all together</h4>
+					  <pre class='stretch'><code>					
+#!/bin/bash
+
+docker build -t demo/kibana .
+BASE=$(pwd)
+SHORT_ID=$(docker run -d -p 8089:80 -p 8443:443 \
+  -v $BASE/sv:/opt/kibana3/sv \
+  -v $BASE/init:/opt/kibana3/init \
+  -v $BASE/service:/opt/kibana3/service \
+  -v $BASE/log:/var/log/kibana \
+  demo/kibana)
+
+LONG_ID=$(docker inspect ${SHORT_ID} | grep ID | awk '{print $2}' | sed 's/"//g' | sed 's/,//g')
+
+for DIR in $(grep cgroup /proc/mounts | awk '{print $2}' | sed "1 d" | xargs)
+do
+  STAT=$(basename $DIR)
+  ln -s $DIR/lxc/$LONG_ID stats/${STAT}
+done
+
+					</code></pre>
+				</section>
+
+				<section>
+					<h2>Docker 302 - Live Demo</h2>
+					<h4>Build and run the container</h4>
+					  <pre><code>					
+cd docker302 && ./demo.sh
+echo "This should fail ... nginx service not running"
+curl localhost:8089 
+					</code></pre>
+					<h4>Start nginx service</h4>
+					  <pre><code>					
+echo "Start the nginx service and try again .. should work"
+cd service && ln -s  ../sv/nginx && cd ..
+sleep 5 && curl localhost:8089
+					</code></pre>
+					<h4>Stop nginx service</h4>
+					  <pre><code>					
+echo "Stop the nginx service again ... should fail"
+rm service/nginx && sleep 5 && curl localhost:8089
+					</code></pre>
+				</section>
+
+				<section>
+					<h2>Docker 302 - Live Demo</h2>
+					<h4>nginx is logging to a docker volume</h4>
+					  <pre><code>					
+ls log/*.log
+cat log/access.log
+					</code></pre>
+					<h4>container specific system metrics are symlinked</h4>
+					  <pre><code>					
+ls stats
+cat stats/memory/memory.stat
+cd ..
+					</code></pre>
+				</section>
+
+				<section>
+					<h2>Docker Cleanup</h2>
+					<h4>By now we're running a ton of containers</h4>
+					  <pre><code>					
+docker ps -a
+					</code></pre>
+					<h4>`docker rm` and `docker kill` are your friends</h4>
+					<p><i>I made your a cleanup script that invokes both</i></p>
+					  <pre><code>					
+./clean.sh
+					</code></pre>
+					<h4>root owned dir (created by runit) nuke it</h4>
+					  <pre><code>					
+sudo rm -rf docker302/sv/nginx/supervise
+					</code></pre>
+				</section>
+
+				<section>
+					<h1>THE END</h1>
+					<h2>Questions?</h2>
+					<h4>Paul Czarkowski  / @pczarkowski </h3>
+				</section>
+
+			</div>
+
+		</div>
+
+		<script src="lib/js/head.min.js"></script>
+		<script src="js/reveal.min.js"></script>
+
+		<script>
+
+			// Full list of configuration options available here:
+			// https://github.com/hakimel/reveal.js#configuration
+			Reveal.initialize({
+				controls: true,
+				progress: true,
+				history: true,
+				center: true,
+
+				theme: Reveal.getQueryHash().theme, // available themes are in /css/theme
+				transition: Reveal.getQueryHash().transition || 'default', // default/cube/page/concave/zoom/linear/fade/none
+
+				// Optional libraries used to extend on reveal.js
+				dependencies: [
+					{ src: 'lib/js/classList.js', condition: function() { return !document.body.classList; } },
+					{ src: 'plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: 'plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+					{ src: 'plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+					{ src: 'plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }
+				]
+			});
+
+		</script>
+
+	</body>
+</html>

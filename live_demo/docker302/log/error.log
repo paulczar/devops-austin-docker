@@ -1,0 +1,2 @@
+2013/10/14 20:06:49 [error] 9#0: *2 open() "/opt/kibana3/html/favicon.ico" failed (2: No such file or directory), client: 172.17.42.1, server: kibana, request: "GET /favicon.ico HTTP/1.1", host: "localhost:8080"
+2013/10/14 20:06:49 [error] 9#0: *2 open() "/opt/kibana3/html/favicon.ico" failed (2: No such file or directory), client: 172.17.42.1, server: kibana, request: "GET /favicon.ico HTTP/1.1", host: "localhost:8080"
